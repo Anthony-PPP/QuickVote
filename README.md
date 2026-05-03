@@ -5,19 +5,26 @@ QuickVote is a simple console-based voting system written in C. It allows studen
 log in, and vote for candidates. It also has an admin that can add or remove candidates, open or
 close the election, and view results.
 
+
 The project is made to practice basic programming like input/output, arrays, and simple algorithms.
+
 
 Data Structures and Algorithms Used
 
 Data Structures:
+
 -Arrays (students and candidates)
+
 -Structs (Student, Candidate, VoteLog)
+
 -Queue (vote history)
 
 Algorithms:
 
 -Linear Search (login system)
+
 -Bubble Sort (ranking results)
+
 -String comparison (email validation)
 
 Features:
