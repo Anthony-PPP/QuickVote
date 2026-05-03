@@ -33,6 +33,9 @@ How to Run
 2. Go to the folder where quickvote.c is located
 3. Compile the program using: gcc quickvote.c -o quickvote
 4. Run the program using: quickvote
+
 Author
 
-Your Name Here
+ANTHONY V. PANGANIBAN
+MAVERICK D. ENRILE
+ADRIAN S. OSON
