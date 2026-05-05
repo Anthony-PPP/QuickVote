@@ -26,14 +26,8 @@ int studentVotes[MAX][POSITIONS];
 int hasVoted[MAX];
 
 char positions[POSITIONS][40] = {
-    "President",
-    "Vice President",
-    "Secretary",
-    "Treasurer",
-    "Auditor",
-    "Public Information Officer",
-    "Business Manager",
-    "Senators"
+    "President","Vice President","Secretary","Treasurer",
+    "Auditor","Public Information Officer","Business Manager","Senators"
 };
 
 int voteLimit[POSITIONS] = {1,1,1,1,1,1,2,5};
@@ -41,219 +35,247 @@ int voteLimit[POSITIONS] = {1,1,1,1,1,1,2,5};
 char adminEmail[] = "admin@cbsua.edu.ph";
 char adminPass[] = "admin123";
 
-void header(char title[]) {
-    printf("\n============================================\n");
-    printf(" %s\n", title);
-    printf("============================================\n");
-}
-
-int loginStudent(char email[], char pass[]) {
+int loginStudent(char e[], char p[]) {
     int i;
     for(i=0;i<studentCount;i++) {
-        if(strcmp(students[i].email, email)==0 &&
-           strcmp(students[i].password, pass)==0) {
+        if(strcmp(students[i].email,e)==0 && strcmp(students[i].password,p)==0)
             return i;
-        }
     }
     return -1;
 }
 
 void viewCandidates() {
     int i;
-    header("CANDIDATES");
-    if(candidateCount == 0) {
+
+    printf("\n==============================\n");
+    printf("        CANDIDATES\n");
+    printf("==============================\n");
+
+    if(candidateCount==0){
         printf("No candidates yet.\n");
         return;
     }
-    for(i=0;i<candidateCount;i++) {
-        printf("%d. %s - %s\n",
-               i+1,
-               candidates[i].name,
-               positions[candidates[i].position]);
-    }
+
+    for(i=0;i<candidateCount;i++)
+        printf("%d. %s - %s\n", i+1, candidates[i].name, positions[candidates[i].position]);
 }
 
 void registerStudent() {
-    header("REGISTER");
+    int i;
+
+    printf("\n==============================\n");
+    printf("          REGISTER\n");
+    printf("==============================\n");
+
     printf("Email: ");
     scanf("%s", students[studentCount].email);
+
     printf("Password: ");
     scanf("%s", students[studentCount].password);
+
     hasVoted[studentCount] = 0;
+
+    for(i=0;i<POSITIONS;i++)
+        studentVotes[studentCount][i] = 0;
+
     studentCount++;
+
     printf("Registered!\n");
 }
 
 void showPositions() {
     int i;
     printf("\nPOSITIONS:\n");
-    for(i=0;i<POSITIONS;i++) {
+    for(i=0;i<POSITIONS;i++)
         printf("%d. %s\n", i+1, positions[i]);
-    }
 }
 
 void addCandidate() {
     int pos;
-    header("ADD CANDIDATE");
+
+    printf("\n==============================\n");
+    printf("       ADD CANDIDATE\n");
+    printf("==============================\n");
+
     showPositions();
+
     printf("\nSelect position: ");
     scanf("%d",&pos);
-    if(pos < 1 || pos > POSITIONS) return;
+
+    if(pos<1||pos>POSITIONS) return;
+
     printf("Name: ");
     scanf(" %[^\n]", candidates[candidateCount].name);
-    candidates[candidateCount].position = pos - 1;
+
+    candidates[candidateCount].position = pos-1;
     candidates[candidateCount].votes = 0;
+
     candidateCount++;
+
     printf("Added!\n");
 }
 
-void vote(int index) {
-    int pos, i, choice;
+void vote(int idx) {
+    int pos,i,choice,count=0;
     int valid[MAX_CANDIDATES];
-    int count;
 
-    header("VOTING");
+    printf("\n==============================\n");
+    printf("          VOTING\n");
+    printf("==============================\n");
+
     showPositions();
 
     printf("\nSelect position: ");
     scanf("%d",&pos);
-    pos = pos - 1;
 
-    if(pos < 0 || pos >= POSITIONS) return;
+    pos--;
 
-    if(studentVotes[index][pos] >= voteLimit[pos]) {
+    if(pos<0||pos>=POSITIONS) return;
+
+    if(studentVotes[idx][pos] >= voteLimit[pos]) {
         printf("No remaining votes!\n");
         return;
     }
 
     printf("\n--- %s ---\n", positions[pos]);
 
-    count = 0;
-
     for(i=0;i<candidateCount;i++) {
-        if(candidates[i].position == pos) {
+        if(candidates[i].position==pos) {
             printf("%d. %s\n", count+1, candidates[i].name);
-            valid[count] = i;
-            count++;
+            valid[count++] = i;
         }
     }
 
-    if(count == 0) {
+    if(count==0) {
         printf("No candidates (ABSTAIN)\n");
-        studentVotes[index][pos]++;
-        hasVoted[index] = 1;
+        studentVotes[idx][pos]++;
+        hasVoted[idx]=1;
         return;
     }
 
     printf("\nChoose (0 = abstain): ");
     scanf("%d",&choice);
 
-    if(choice == 0) {
-        studentVotes[index][pos]++;
-        hasVoted[index] = 1;
+    if(choice==0) {
+        studentVotes[idx][pos]++;
+        hasVoted[idx]=1;
         printf("Abstained\n");
         return;
     }
 
-    if(choice >= 1 && choice <= count) {
+    if(choice>=1 && choice<=count) {
         candidates[valid[choice-1]].votes++;
-        studentVotes[index][pos]++;
-        hasVoted[index] = 1;
+        studentVotes[idx][pos]++;
+        hasVoted[idx]=1;
         printf("Vote recorded!\n");
     }
 }
 
 void showResults() {
     int i;
-    header("RESULTS");
-    for(i=0;i<candidateCount;i++) {
+
+    printf("\n==============================\n");
+    printf("          RESULTS\n");
+    printf("==============================\n");
+
+    for(i=0;i<candidateCount;i++)
         printf("%s - %s : %d votes\n",
                candidates[i].name,
                positions[candidates[i].position],
                candidates[i].votes);
-    }
 }
 
 void viewRegisteredStudents() {
     int i;
-    header("REGISTERED STUDENTS");
-    if(studentCount == 0) {
+
+    printf("\n==============================\n");
+    printf("    REGISTERED STUDENTS\n");
+    printf("==============================\n");
+
+    if(studentCount==0){
         printf("No students registered.\n");
         return;
     }
-    for(i=0;i<studentCount;i++) {
+
+    for(i=0;i<studentCount;i++)
         printf("%d. %s - %s\n",
                i+1,
                students[i].email,
                hasVoted[i] ? "VOTED" : "NOT VOTED");
-    }
 }
 
-void studentMenu(int index) {
-    int choice;
+void studentMenu(int idx) {
+    int c;
+
     do {
-        header("STUDENT MENU");
-        printf("1. View Candidates\n");
-        printf("2. Vote\n");
-        printf("3. Logout\n");
-        scanf("%d",&choice);
-        if(choice == 1) viewCandidates();
-        else if(choice == 2) vote(index);
-    } while(choice != 3);
+        printf("\n==============================\n");
+        printf("        STUDENT MENU\n");
+        printf("==============================\n");
+
+        printf("1. View Candidates\n2. Vote\n3. Logout\n Choice:");
+        scanf("%d",&c);
+
+        if(c==1) viewCandidates();
+        else if(c==2) vote(idx);
+
+    } while(c!=3);
 }
 
 void adminMenu() {
-    int choice;
+    int c;
+
     do {
-        header("ADMIN DASHBOARD");
-        printf("1. Add Candidate\n");
-        printf("2. View Results\n");
-        printf("3. View Registered Students\n");
-        printf("4. Logout\n");
-        scanf("%d",&choice);
-        if(choice == 1) addCandidate();
-        else if(choice == 2) showResults();
-        else if(choice == 3) viewRegisteredStudents();
-    } while(choice != 4);
+        printf("\n==============================\n");
+        printf("       ADMIN DASHBOARD\n");
+        printf("==============================\n");
+
+        printf("1. Add Candidate\n2. View Results\n3. View Students\n4. Logout\n Choice:");
+        scanf("%d",&c);
+
+        if(c==1) addCandidate();
+        else if(c==2) showResults();
+        else if(c==3) viewRegisteredStudents();
+
+    } while(c!=4);
 }
 
 void login() {
-    char email[50], pass[50];
-    int index;
+    char e[50], p[50];
+    int idx;
 
-    header("LOGIN");
+    printf("\n==============================\n");
+    printf("           LOGIN\n");
+    printf("==============================\n");
 
-    printf("Email: ");
-    scanf("%s", email);
+    printf("Email: "); scanf("%s", e);
+    printf("Password: "); scanf("%s", p);
 
-    printf("Password: ");
-    scanf("%s", pass);
-
-    if(strcmp(email, adminEmail)==0 &&
-       strcmp(pass, adminPass)==0) {
+    if(strcmp(e,adminEmail)==0 && strcmp(p,adminPass)==0) {
         adminMenu();
         return;
     }
 
-    index = loginStudent(email, pass);
+    idx = loginStudent(e,p);
 
-    if(index != -1)
-        studentMenu(index);
-    else
-        printf("Invalid login!\n");
+    if(idx!=-1) studentMenu(idx);
+    else printf("Invalid login!\n");
 }
 
 int main() {
-    int choice;
+    int c;
 
     do {
-        header("QUICKVOTE SYSTEM");
-        printf("1. Login\n2. Register\n3. Exit\n");
-        scanf("%d",&choice);
+        printf("\n==============================\n");
+        printf("     QUICKVOTE SYSTEM\n");
+        printf("==============================\n");
 
-        if(choice == 1) login();
-        else if(choice == 2) registerStudent();
-    } while(choice != 3);
+        printf("1. Login\n2. Register\n3. Exit\n");
+        scanf("%d",&c);
+
+        if(c==1) login();
+        else if(c==2) registerStudent();
+
+    } while(c!=3);
 
     return 0;
 }
