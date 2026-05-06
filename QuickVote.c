@@ -119,11 +119,20 @@ void viewCandidates() {
 //register student
 void registerStudent() {
     int i, j;
+    char *domain;
 
     printf("\n=== REGISTER ===\n");
 
     printf("Email: ");
     scanf("%s", students[studentCount].email);
+
+// email validation (@cbsua.edu.ph only)
+    domain = strstr(students[studentCount].email, "@cbsua.edu.ph");
+
+    if(domain == NULL || strcmp(domain, "@cbsua.edu.ph") != 0) {
+        printf("Invalid email domain!\n");
+        return;
+    }
 
     printf("Password: ");
     scanf("%s", students[studentCount].password);
@@ -170,7 +179,6 @@ void addCandidate() {
     scanf(" %[^\n]", candidates[candidateCount].name);
 
     candidates[candidateCount].position = pos - 1;
-
     candidates[candidateCount].votes = 0;
 
     candidateCount++;
@@ -277,7 +285,6 @@ void showResults() {
             }
         }
 
-//abstain per position
         printf("ABSTAIN - %s : %d\n", positions[i], abstainCount[i]);
     }
 }
@@ -300,7 +307,6 @@ void viewRegisteredStudents() {
                hasVoted[i] ? "VOTED" : "NOT VOTED");
     }
 }
-
 
 void studentMenu(int idx) {
     int c;
@@ -383,7 +389,6 @@ int main() {
 // if user chooses register
         else if(c == 2) registerStudent();
 
-// repeat menu until user chooses exit (3)
     } while(c != 3);
 
     return 0;
