@@ -6,7 +6,7 @@
 #define MAX_CANDIDATES 100
 #define POSITIONS 8
 
-//STRUCTURES (DATA FORMAT)
+//STRUCTURES
 
 // student info (email + password)
 struct Student {
@@ -21,7 +21,6 @@ struct Candidate {
     int votes;
 };
 
-// GLOBAL DATA (MAIN STORAGE)
 
 // list ng students
 struct Student students[MAX];
@@ -41,6 +40,9 @@ int votedCandidate[MAX][MAX_CANDIDATES];
 
 // track if student already voted
 int hasVoted[MAX];
+
+// abstain counter
+int abstainCount[POSITIONS];
 
 // list of positions
 char positions[POSITIONS][40] = {
@@ -215,6 +217,7 @@ void vote(int idx) {
     if(count == 0) {
         printf("No candidates\n");
         studentVotes[idx][pos]++;
+        abstainCount[pos]++;
         hasVoted[idx] = 1;
         return;
     }
@@ -227,6 +230,7 @@ void vote(int idx) {
     if(choice == 0) {
         printf("Abstained\n");
         studentVotes[idx][pos]++;
+        abstainCount[pos]++;
         hasVoted[idx] = 1;
         return;
     }
@@ -272,6 +276,9 @@ void showResults() {
                        candidates[j].votes);
             }
         }
+
+//abstain per position
+        printf("ABSTAIN - %s : %d\n", positions[i], abstainCount[i]);
     }
 }
 
