@@ -1,169 +1,207 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-//max number ng students saka candidates
-#define MAX 100
-#define MAX_CANDIDATES 100
 #define POSITIONS 8
 
-//STRUCTURES
+struct StackNode {
+    int position;
+    int candidateIndex;
+    struct StackNode *next;
+};
 
-// student info (email + password)
 struct Student {
     char email[50];
     char password[50];
+
+    int studentVotes[POSITIONS];
+    int hasVoted;
+
+    struct StackNode *voteStack;
+
+    struct Student *next;
 };
 
-// candidate info (name, position, votes)
 struct Candidate {
     char name[50];
     int position;
     int votes;
+
+    struct Candidate *next;
 };
 
+struct Student *studentHead = NULL;
+struct Candidate *candidateHead = NULL;
 
-// list ng students
-struct Student students[MAX];
-
-// list ng candidates
-struct Candidate candidates[MAX_CANDIDATES];
-
-// tiga bilang
-int studentCount = 0;
-int candidateCount = 0;
-
-// track votes per student per position
-int studentVotes[MAX][POSITIONS];
-
-// track if student already voted candidate
-int votedCandidate[MAX][MAX_CANDIDATES];
-
-// track if student already voted
-int hasVoted[MAX];
-
-// abstain counter
 int abstainCount[POSITIONS];
 
-// list of positions
-char positions[POSITIONS][40] = {
+char positions[POSITIONS][50] = {
     "President","Vice President","Secretary","Treasurer",
     "Auditor","Public Information Officer","Business Manager","Senators"
 };
 
-// voting limit per position
 int voteLimit[POSITIONS] = {1,1,1,1,1,1,2,5};
 
-// admin account
 char adminEmail[] = "admin@cbsua.edu.ph";
 char adminPass[] = "admin123";
 
-//input validator
 int getInt() {
+
     int x;
     char ch;
 
-// try to read number
-    if (scanf("%d", &x) != 1) {
+    if(scanf("%d", &x) != 1) {
+
         printf("Invalid input!\n");
 
-// clear wrong input
-        while ((ch = getchar()) != '\n' && ch != EOF);
+        while((ch = getchar()) != '\n' && ch != EOF);
+
         return -1;
     }
 
     return x;
 }
 
-//login checck
-int loginStudent(char e[], char p[]) {
+int isValidName(char str[]) {
+
     int i;
 
-// check all students
-    for(i = 0; i < studentCount; i++) {
-        if(strcmp(students[i].email, e) == 0 &&
-           strcmp(students[i].password, p) == 0)
-            return i;
+    for(i = 0; str[i] != '\0'; i++) {
+
+        if(!((str[i] >= 'A' && str[i] <= 'Z') ||
+             (str[i] >= 'a' && str[i] <= 'z') ||
+             str[i] == ' ')) {
+
+            return 0;
+        }
     }
 
-    return -1;
+    return 1;
 }
 
-//show candidates
+struct Student* loginStudent(char e[], char p[]) {
+
+    struct Student *temp = studentHead;
+
+    while(temp != NULL) {
+
+        if(strcmp(temp->email, e) == 0 &&
+           strcmp(temp->password, p) == 0) {
+
+            return temp;
+        }
+
+        temp = temp->next;
+    }
+
+    return NULL;
+}
+
+void showPositions() {
+
+    int i;
+
+    printf("\nPOSITIONS:\n");
+
+    for(i = 0; i < POSITIONS; i++) {
+        printf("%d. %s\n", i + 1, positions[i]);
+    }
+}
+
 void viewCandidates() {
-    int i, j, num;
+
+    int i, num;
+    struct Candidate *temp;
 
     num = 1;
 
     printf("\n=== CANDIDATES ===\n");
 
-// if no candidates
-    if(candidateCount == 0) {
+    if(candidateHead == NULL) {
         printf("No candidates yet.\n");
         return;
     }
 
-// show grouped by position
     for(i = 0; i < POSITIONS; i++) {
-        for(j = 0; j < candidateCount; j++) {
-            if(candidates[j].position == i) {
+
+        temp = candidateHead;
+
+        while(temp != NULL) {
+
+            if(temp->position == i) {
+
                 printf("%d. %s - %s\n",
                        num,
-                       candidates[j].name,
+                       temp->name,
                        positions[i]);
+
                 num++;
             }
+
+            temp = temp->next;
         }
     }
 }
 
-//register student
 void registerStudent() {
-    int i, j;
+
+    struct Student *newStudent;
+    struct Student *temp;
     char *domain;
+    int i;
+
+    newStudent = (struct Student*)malloc(sizeof(struct Student));
 
     printf("\n=== REGISTER ===\n");
 
     printf("Email: ");
-    scanf("%s", students[studentCount].email);
+    scanf("%s", newStudent->email);
 
-// email validation (@cbsua.edu.ph only)
-    domain = strstr(students[studentCount].email, "@cbsua.edu.ph");
+    domain = strstr(newStudent->email, "@cbsua.edu.ph");
 
     if(domain == NULL || strcmp(domain, "@cbsua.edu.ph") != 0) {
+
         printf("Invalid email domain!\n");
+
+        free(newStudent);
         return;
     }
 
     printf("Password: ");
-    scanf("%s", students[studentCount].password);
+    scanf("%s", newStudent->password);
 
-// reset voting status
-    hasVoted[studentCount] = 0;
+    newStudent->hasVoted = 0;
+    newStudent->voteStack = NULL;
 
-    for(i = 0; i < POSITIONS; i++)
-        studentVotes[studentCount][i] = 0;
+    for(i = 0; i < POSITIONS; i++) {
+        newStudent->studentVotes[i] = 0;
+    }
 
-    for(j = 0; j < MAX_CANDIDATES; j++)
-        votedCandidate[studentCount][j] = 0;
+    newStudent->next = NULL;
 
-    studentCount++;
+    if(studentHead == NULL) {
+        studentHead = newStudent;
+    } else {
+
+        temp = studentHead;
+
+        while(temp->next != NULL) {
+            temp = temp->next;
+        }
+
+        temp->next = newStudent;
+    }
 
     printf("Registered!\n");
 }
 
-// show positions
-void showPositions() {
-    int i;
-
-    printf("\nPOSITIONS:\n");
-
-    for(i = 0; i < POSITIONS; i++)
-        printf("%d. %s\n", i + 1, positions[i]);
-}
-
-//add candidate
 void addCandidate() {
+
+    struct Candidate *newCandidate;
+    struct Candidate *temp;
     int pos;
+
+    newCandidate = (struct Candidate*)malloc(sizeof(struct Candidate));
 
     printf("\n=== ADD CANDIDATE ===\n");
 
@@ -171,27 +209,74 @@ void addCandidate() {
 
     printf("\nSelect position: ");
     pos = getInt();
-    if(pos == -1) return;
 
-    if(pos < 1 || pos > POSITIONS) return;
+    if(pos == -1 || pos < 1 || pos > POSITIONS) {
+        free(newCandidate);
+        return;
+    }
 
     printf("Name: ");
-    scanf(" %[^\n]", candidates[candidateCount].name);
+    scanf(" %[^\n]", newCandidate->name);
 
-    candidates[candidateCount].position = pos - 1;
-    candidates[candidateCount].votes = 0;
+    if(!isValidName(newCandidate->name)) {
+        printf("Invalid name! Letters only.\n");
+        free(newCandidate);
+        return;
+    }
 
-    candidateCount++;
+    newCandidate->position = pos - 1;
+    newCandidate->votes = 0;
+    newCandidate->next = NULL;
+
+    if(candidateHead == NULL) {
+        candidateHead = newCandidate;
+    } else {
+
+        temp = candidateHead;
+
+        while(temp->next != NULL) {
+            temp = temp->next;
+        }
+
+        temp->next = newCandidate;
+    }
 
     printf("Added!\n");
 }
 
+void undoLastVote(struct Student *student) {
 
-void vote(int idx) {
-    int pos, i, choice, count;
-    int valid[MAX_CANDIDATES];
+    struct StackNode *temp;
+
+    if(student->voteStack == NULL) {
+        printf("Nothing to undo.\n");
+        return;
+    }
+
+    temp = student->voteStack;
+
+    student->studentVotes[temp->position]--;
+
+    student->voteStack = temp->next;
+
+    free(temp);
+
+    printf("Last vote undone!\n");
+}
+
+void vote(struct Student *student) {
+
+    struct Candidate *temp;
+    struct Candidate *valid[100];
+
+    struct StackNode *newNode;
+
+    int pos, choice;
+    int count;
+    int i;
 
     count = 0;
+    i = 1;
 
     printf("\n=== VOTING ===\n");
 
@@ -199,140 +284,202 @@ void vote(int idx) {
 
     printf("\nSelect position: ");
     pos = getInt();
+
     if(pos == -1) return;
 
     pos--;
 
     if(pos < 0 || pos >= POSITIONS) return;
 
-// check vote limit per position
-    if(studentVotes[idx][pos] >= voteLimit[pos]) {
+    if(student->studentVotes[pos] >= voteLimit[pos]) {
         printf("No remaining votes!\n");
         return;
     }
 
-    printf("\n--- %s ---\n", positions[pos]);
+    temp = candidateHead;
 
-// list candidates in the position
-    for(i = 0; i < candidateCount; i++) {
-        if(candidates[i].position == pos) {
-            printf("%d. %s\n", count + 1, candidates[i].name);
-            valid[count] = i;
+    while(temp != NULL) {
+
+        if(temp->position == pos) {
+
+            printf("%d. %s\n", i, temp->name);
+
+            valid[count] = temp;
+
             count++;
+            i++;
         }
+
+        temp = temp->next;
     }
 
     if(count == 0) {
+
         printf("No candidates\n");
-        studentVotes[idx][pos]++;
+
+        student->studentVotes[pos]++;
         abstainCount[pos]++;
-        hasVoted[idx] = 1;
+        student->hasVoted = 1;
+
         return;
     }
 
-    printf("\nChoose (0 = abstain): ");
+    printf("Choose (0 = abstain): ");
     choice = getInt();
-    if(choice == -1) return;
 
-// abstain option
     if(choice == 0) {
+
         printf("Abstained\n");
-        studentVotes[idx][pos]++;
+
+        student->studentVotes[pos]++;
         abstainCount[pos]++;
-        hasVoted[idx] = 1;
+        student->hasVoted = 1;
+
         return;
     }
 
-// valid vote
     if(choice >= 1 && choice <= count) {
 
-        int selected = valid[choice - 1];
+        valid[choice - 1]->votes++;
 
-// prevent double vote per candidate
-        if(votedCandidate[idx][selected] == 0) {
-            candidates[selected].votes++;
-            votedCandidate[idx][selected] = 1;
-            studentVotes[idx][pos]++;
-            hasVoted[idx] = 1;
+        student->studentVotes[pos]++;
+        student->hasVoted = 1;
 
-            printf("Vote recorded!\n");
-        }
-        else {
-            printf("Already voted this candidate!\n");
-        }
+        newNode = (struct StackNode*)malloc(sizeof(struct StackNode));
+
+        newNode->position = pos;
+        newNode->candidateIndex = choice - 1;
+
+        newNode->next = student->voteStack;
+        student->voteStack = newNode;
+
+        printf("Vote recorded!\n");
     }
 }
 
-//show results
 void showResults() {
-    int i, j;
+
+    struct Candidate *temp;
+    struct Candidate *arr[100];
+    struct Candidate *swap;
+
+    int i, j, k, count;
 
     printf("\n=== RESULTS ===\n");
 
-    if(candidateCount == 0) {
+    if(candidateHead == NULL) {
         printf("No candidates yet.\n");
         return;
     }
 
-// show results grouped by position
     for(i = 0; i < POSITIONS; i++) {
-        for(j = 0; j < candidateCount; j++) {
-            if(candidates[j].position == i) {
-                printf("%s - %s : %d votes\n",
-                       candidates[j].name,
-                       positions[i],
-                       candidates[j].votes);
+
+        count = 0;
+        temp = candidateHead;
+
+        while(temp != NULL) {
+
+            if(temp->position == i) {
+                arr[count] = temp;
+                count++;
+            }
+
+            temp = temp->next;
+        }
+
+        for(j = 0; j < count - 1; j++) {
+
+            for(k = 0; k < count - j - 1; k++) {
+
+                if(arr[k]->votes < arr[k + 1]->votes) {
+
+                    swap = arr[k];
+                    arr[k] = arr[k + 1];
+                    arr[k + 1] = swap;
+                }
             }
         }
 
-        printf("ABSTAIN - %s : %d\n", positions[i], abstainCount[i]);
+        printf("\n--- %s ---\n", positions[i]);
+
+        if(count == 0) {
+            printf("No candidates.\n");
+        } else {
+
+            for(j = 0; j < count; j++) {
+
+                printf("%d. %s - %d votes\n",
+                       j + 1,
+                       arr[j]->name,
+                       arr[j]->votes);
+            }
+        }
+
+        printf("ABSTAIN: %d\n", abstainCount[i]);
     }
 }
 
-// show students
 void viewRegisteredStudents() {
-    int i;
+
+    struct Student *temp;
+    int num;
+
+    num = 1;
+    temp = studentHead;
 
     printf("\n=== STUDENTS ===\n");
 
-    if(studentCount == 0) {
+    if(temp == NULL) {
         printf("No students registered.\n");
         return;
     }
 
-    for(i = 0; i < studentCount; i++) {
+    while(temp != NULL) {
+
         printf("%d. %s - %s\n",
-               i + 1,
-               students[i].email,
-               hasVoted[i] ? "VOTED" : "NOT VOTED");
+               num,
+               temp->email,
+               temp->hasVoted ? "VOTED" : "NOT VOTED");
+
+        num++;
+        temp = temp->next;
     }
 }
 
-void studentMenu(int idx) {
+void studentMenu(struct Student *student) {
+
     int c;
 
     do {
+
         printf("\n--- STUDENT MENU ---\n");
-        printf("1. View Candidates\n2. Vote\n3. Logout\nChoice:");
+        printf("1. View Candidates\n");
+        printf("2. Vote\n");
+        printf("3. Undo Last Vote\n");
+        printf("4. Logout\n");
 
         c = getInt();
-        if(c == -1) continue;
 
         if(c == 1) viewCandidates();
-        else if(c == 2) vote(idx);
+        else if(c == 2) vote(student);
+        else if(c == 3) undoLastVote(student);
 
-    } while(c != 3);
+    } while(c != 4);
 }
 
 void adminMenu() {
+
     int c;
 
     do {
+
         printf("\n--- ADMIN MENU ---\n");
-        printf("1. Add Candidate\n2. View Results\n3. View Students\n4. Logout\nChoice:");
+        printf("1. Add Candidate\n");
+        printf("2. View Results\n");
+        printf("3. View Students\n");
+        printf("4. Logout\n");
 
         c = getInt();
-        if(c == -1) continue;
 
         if(c == 1) addCandidate();
         else if(c == 2) showResults();
@@ -342,8 +489,9 @@ void adminMenu() {
 }
 
 void login() {
+
     char e[50], p[50];
-    int idx;
+    struct Student *student;
 
     printf("\n=== LOGIN ===\n");
 
@@ -353,40 +501,38 @@ void login() {
     printf("Password: ");
     scanf("%s", p);
 
-// check admin
     if(strcmp(e, adminEmail) == 0 &&
        strcmp(p, adminPass) == 0) {
+
         adminMenu();
         return;
     }
 
-// check student
-    idx = loginStudent(e, p);
+    student = loginStudent(e, p);
 
-    if(idx != -1) studentMenu(idx);
-    else printf("Invalid login!\n");
+    if(student != NULL)
+        studentMenu(student);
+    else
+        printf("Invalid login!\n");
 }
 
 int main() {
+
     int c;
 
     do {
+
         printf("\n==============================\n");
         printf("     QUICKVOTE SYSTEM\n");
         printf("==============================\n");
 
-        printf("1. Login\n2. Register\n3. Exit\nChoice:");
+        printf("1. Login\n");
+        printf("2. Register\n");
+        printf("3. Exit\n");
 
-// get user menu choice
         c = getInt();
 
-// if input is invalid, go back to menu
-        if(c == -1) continue;
-
-// if user chooses login
         if(c == 1) login();
-
-// if user chooses register
         else if(c == 2) registerStudent();
 
     } while(c != 3);
